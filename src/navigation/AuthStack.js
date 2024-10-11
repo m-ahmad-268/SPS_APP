@@ -12,9 +12,6 @@ const Stack = createStackNavigator();
 
 const AuthStack = () => {
     const { isLoading, token, error, isAuthenticated, userProfile } = useSelector((state) => state.auth);
-
-    console.log('token-----------in---------------authnavigatoro', userProfile?.isResetPassword);
-
     return (
         <Stack.Navigator initialRouteName={userProfile?.isResetPassword == 'Y' ? 'ResetPasswordScreen' : 'Login'}>
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />

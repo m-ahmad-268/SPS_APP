@@ -80,7 +80,8 @@ const LoginScreen = ({ navigation }) => {
                     const currentUser = {
                         userId: data.result.userId,
                         session: data.result.session,
-                        isResetPassword: data.result?.isResetPassword ? data.result?.isResetPassword : 'N'
+                        customerNo: data.result?.customerNo,
+                        isResetPassword: data.result?.isResetPassword ? data.result?.isResetPassword : 'N',
                     }
                     // Login Notification
                     AsyncStorage.removeItem("logoutId");
@@ -115,7 +116,7 @@ const LoginScreen = ({ navigation }) => {
                         // this.allCompanies = data.result;
                         if (data.result && data?.result?.length == 1) {
                             if (data?.result[0]?.companyId) {
-                                proceed(data?.result[0]?.companyId, data.result?.customerNo, currentUser)
+                                proceed(data?.result[0]?.companyId, currentUser)
                                 console.log('currentCompany', data?.result[0]?.name);
 
                                 AsyncStorage.setItem('currentCompany', data?.result[0]?.name);
@@ -252,7 +253,7 @@ const LoginScreen = ({ navigation }) => {
         }
     }
 
-    const proceed = async (selectedCompanyId, customerNo, activeUser) => {
+    const proceed = async (selectedCompanyId, activeUser) => {
         try {
             // const getUserData = await AsyncStorage.getItem('currentUser');
             // const activeUser = JSON.parse(getUserData);
@@ -273,7 +274,7 @@ const LoginScreen = ({ navigation }) => {
                     // const companyName = this.allCompanies.find((x) => x.companyId === Number(selectedCompanyId)).name;
                     // localStorage.setItem('currentCompany', companyName);
 
-                    if (!customerNo) {
+                    if (!activeUser?.customerNo) {
                         console.log('customer0------------');
                         // this.getCustomersList();
                         return
