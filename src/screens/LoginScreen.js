@@ -311,7 +311,7 @@ const LoginScreen = ({ navigation }) => {
                 return;
             }
             setErrorMsg('');
-            // dispatch(setLoading());
+            dispatch(setLoading());
             const reqBody = {
                 userName: email,
                 password: password,
@@ -547,8 +547,8 @@ const LoginScreen = ({ navigation }) => {
         } catch (error) {
             Toast.show({
                 type: 'error', // 'error', 'info' can also be used
-                text1: 'Server Error!',
-                text2: 'Please contact to admin',
+                text1: t('serverErrorText'),
+                text2: t('error'),
             });
             console.log('LoggedInFunction', error);
             dispatch(resetLoading());
