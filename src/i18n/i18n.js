@@ -18,6 +18,10 @@ const resources = {
             "serverErrorText": "Server error. Please contact admin !",
             "success": "Success",
             "error": "Error",
+            "logout": "Logout",
+            "cancel": "Cancel",
+            "ok": "Ok",
+            "submit": "Submit",
 
         }
     },
@@ -29,6 +33,10 @@ const resources = {
             "serverErrorText": "خطأ في الخادم. يرجى الاتصال بالمسؤول!",
             "success": "نجاح",
             "error": "خطأ",
+            "logout": "تسجيل خروج",
+            "cancel": "إلغاء",
+            "ok": "حسنا",
+            "submit": "رفع",
         }
     }
 };

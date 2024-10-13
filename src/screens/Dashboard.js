@@ -19,6 +19,7 @@ const Dashboard = ({ navigation, route }) => {
         console.log('DashboardTriggered------------useFocusEffect------------------');
         return () => {
             console.log('Dashboard unfocused');
+            dispatch(setToken());
         };
         // if (reloadOnce == 0) {
         //     setScreenFieldsDataApi();
@@ -36,7 +37,7 @@ const Dashboard = ({ navigation, route }) => {
             {/* <Text style={styles.text}>{t('SAR')}</Text> */}
             {/* <Text style={styles.text}>{'طشسيشسيشس'}</Text> */}
             {/* <LanguageSwitcher></LanguageSwitcher> */}
-            <Button title={'Page Refresh'} onPress={() => dispatch(setToken())} />
+            {/* <Button title={'Page Refresh'} onPress={() => dispatch(setToken())} /> */}
         </View>
     );
 };

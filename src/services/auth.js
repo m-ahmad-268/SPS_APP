@@ -138,6 +138,26 @@ export const logoutBeforeCompanySelectionApi = async (credentials, headers = {})
     });
 };
 
+export const acceptTermsAndConditionsApi = async (credentials, headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/user/acceptTermsAndConditions`;
+    return apiRequest({
+        url: url,
+        method: "POST",
+        data: credentials,
+        headers: headers,
+    });
+};
+
+export const setPasswordApi = async (credentials, headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/user/setPassword`;
+    return apiRequest({
+        url: url,
+        method: "POST",
+        data: credentials,
+        headers: headers,
+    });
+};
+
 export const checkSessionApi = async (headers = {}) => {
     console.log('toocheckSession');
     const url = `${userModuleApiBaseUrl}/login/checkSession`;

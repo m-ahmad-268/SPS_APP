@@ -3,11 +3,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import AuthStack from './AuthStack';
 import DrawerNavigator from './DrawerNavigator';
-import { ActivityIndicator, AppState, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, StatusBar, Image, StyleSheet, Text, View } from 'react-native';
 import { checkSession, login, refreshToken } from '../redux/slices/authSlice';
 import NetInfo from '@react-native-community/netinfo';[]
 import Toast from 'react-native-toast-message';
 import colors from '../Utils/colors';
+import FastImage from 'react-native-fast-image';
 import { useFocusEffect } from '@react-navigation/native';
 
 const RootNavigator = () => {
@@ -75,11 +76,16 @@ const RootNavigator = () => {
         <>
             {/* <StatusBar style={{ backgroundColor: 'red' }}></StatusBar> */}
             <StatusBar
-                barStyle={false ? 'light-content' : 'dark-content'}
-                backgroundColor={true ? colors.primary : 'white'}
+                barStyle={isAuthenticated ? 'light-content' : 'dark-content'}
+                backgroundColor={isAuthenticated ? colors.secondary : colors.primary}
             />
             {isLoading && <View style={styles.loader}>
-                <ActivityIndicator size="large" />
+                <FastImage
+                    source={require('../assets/images/Ripple-1s-200px.gif')} // Local GIF
+                    style={{ width: 80, height: 80 }}
+                    resizeMode={FastImage.resizeMode.cover}
+                />
+                {/* <ActivityIndicator size="large" /> */}
             </View>}
             {isAuthenticated ? <DrawerNavigator /> : <AuthStack />}
         </>
@@ -105,7 +111,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)'
+        opacity: .9,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)'
     }
 });
 export default RootNavigator;

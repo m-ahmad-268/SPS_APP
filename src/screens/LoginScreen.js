@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateEmail, validatePassword } from '../Utils/validattion';
 import { ScrollView } from 'react-native-gesture-handler';
 import colors from '../Utils/colors';
+import PasswordField from '../Shared/passwordField';
 // import Icon from 'react-native-vector-icons/Ionicons'; 
 // Arrow Icon
 
@@ -37,9 +38,9 @@ const LoginScreen = ({ navigation }) => {
 
     const setScreenFieldsDataApi = async () => {
         try {
-            // dispatch(setLoading());
             const response = await setScreenFieldsData(fields, "M-SPS", "S-LOGIN-PAGE", { 'langid': isRTL ? 2 : 1 });
             setFields(response);
+            dispatch(resetLoading());
         } catch (error) {
             setFields(true);
             dispatch(resetLoading());
@@ -48,12 +49,12 @@ const LoginScreen = ({ navigation }) => {
     }
 
     useEffect(() => {
-        dispatch(resetLoading());
         console.log('-------------------------LOGIN---------------------------', userProfile?.userId);
         console.log('LoginTriggerdLoading---------------------------', isLoading);
         console.log('LoginTriggerdToken---------------------------', userProfile?.isResetPassword);
         console.log('LoginTriggerdisAuthenticated---------------------------', isAuthenticated);
         console.log('LoginTriggerdField--------------------------', isAuthenticated);
+        dispatch(setLoading());
         setScreenFieldsDataApi();
 
     }, [])
@@ -310,7 +311,7 @@ const LoginScreen = ({ navigation }) => {
                 return;
             }
             setErrorMsg('');
-            dispatch(setLoading());
+            // dispatch(setLoading());
             const reqBody = {
                 userName: email,
                 password: password,
@@ -561,7 +562,7 @@ const LoginScreen = ({ navigation }) => {
 
     return (
         <ScrollView style={styles.container}>
-            <LanguageSwitcher></LanguageSwitcher>
+            <LanguageSwitcher styleProp={{ top: 50, right: 0, }} />
             {fields && <View style={{ marginVertical: 180, }}>
                 {/* <Text style={{ fontSize: 40, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>{t('welcome')}</Text> */}
                 <Text style={{ fontSize: 35, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>{fields?.['LOGIN']?.fieldValue || 'Login'}</Text>
@@ -577,13 +578,10 @@ const LoginScreen = ({ navigation }) => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                 />
-                <TextInput
-                    placeholder={fields?.['PASSWORD']?.fieldValue || 'Password'}
+                <PasswordField
                     value={password}
-                    placeholderTextColor={colors.grey}
                     onChangeText={setPassword}
-                    style={styles.input}
-                    secureTextEntry
+                    placeholder={fields?.['PASSWORD']?.fieldValue || 'Password'}
                 />
                 {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 <TouchableOpacity style={[styles.input, isLoader ? { backgroundColor: 'lightgrey' } : { backgroundColor: 'black' }]}
@@ -602,9 +600,6 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 15,
         backgroundColor: colors.primary,
-        // backgroundColor: 'pink',
-        // alignItems: 'center',
-        // justifyContent: 'center',
     },
     input: {
         borderColor: 'lightgrey',

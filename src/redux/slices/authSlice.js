@@ -67,6 +67,7 @@ const authSlice = createSlice({
         isAuthenticated: false,
         error: null,
         userProfile: {},
+        activeRouteName: 'HomeScreen',
     },
     reducers: {
         logout(state) {
@@ -92,7 +93,7 @@ const authSlice = createSlice({
             state.userProfile = null;
         },
         setToken(state, action) {
-            console.log(action);
+            // console.log(action);
 
             const randomValue = Math.floor(Math.random() * 101);
             state.token = randomValue;
@@ -150,7 +151,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 const responseCode = action?.payload.code; // Assuming responseCode is part of the payload
                 if (responseCode === 200) {
-                    state.userProfile = { ...action.payload?.result };
+                    // state.userProfile = { ...action.payload?.result };
                     // state.refreshToken = action.payload.refreshToken;
                     state.isAuthenticated = true;
                 } else {

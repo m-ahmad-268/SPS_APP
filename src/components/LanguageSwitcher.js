@@ -12,7 +12,7 @@ import '../i18n/i18n';
 import colors from '../Utils/colors';
 import { useTranslation } from 'react-i18next';
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher = ({ styleProp }) => {
     const dispatch = useDispatch();
     const currentLanguage = useSelector((state) => state.language.language);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -22,7 +22,6 @@ const LanguageSwitcher = () => {
         { code: 'en', name: 'English' },
         { code: 'ar', name: 'عربي' },
     ];
-
 
     const switchLanguage = (lang) => {
         dispatch(setLanguage(lang));
@@ -41,7 +40,7 @@ const LanguageSwitcher = () => {
     };
 
     return (
-        <View style={styles.dropdownContainer}>
+        <View style={[styles.dropdownContainer, styleProp]}>
             <TouchableOpacity style={styles.dropdownHeader} onPress={() => setDropdownOpen(!dropdownOpen)}>
                 <Text style={styles.selectedText}>
                     {currentLanguage == 'ar' ? "عربي" : 'English'}
@@ -69,8 +68,6 @@ const LanguageSwitcher = () => {
 const styles = StyleSheet.create({
     dropdownContainer: {
         position: 'absolute',
-        top: 50,
-        right: 0,
         // alignSelf: 'flex-end',
         // margin: 20,
         // backgroundColor: 'red',

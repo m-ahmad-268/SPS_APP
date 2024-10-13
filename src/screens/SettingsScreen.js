@@ -1,16 +1,34 @@
 // /screens/SettingsScreen.js
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Button, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLanguage } from '../redux/slices/languageSlice';
 import { useTranslation } from 'react-i18next';
 import { I18nManager } from 'react-native';
 import RNRestart from 'react-native-restart';
+import { setToken } from '../redux/slices/authSlice';
+import { useFocusEffect } from '@react-navigation/native';
 
 const SettingsScreen = () => {
     const dispatch = useDispatch();
     const { i18n } = useTranslation();
     const currentLanguage = useSelector((state) => state.language.language);
+    const { isLoading, token, error, isAuthenticated, userProfile } = useSelector((state) => state.auth);
+
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                console.log('--------------------------------------HomescreenTriggered unfocused');
+                dispatch(setToken()); // Clean-up or reset logic
+            };
+        }, [userProfile])
+    );
+
+    useEffect(() => {
+        console.log('-------------------------SettingcreenTriggered  Entrances-----------------', userProfile);
+
+
+    }, [])
 
     const switchLanguage = async (lang) => {
         dispatch(setLanguage(lang));
@@ -26,6 +44,8 @@ const SettingsScreen = () => {
 
         RNRestart.Restart();
     };
+
+
 
     return (
         <View style={styles.container}>

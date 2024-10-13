@@ -1,20 +1,23 @@
 // Example: /screens/HomeScreen.js
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Button, I18nManager, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Button, I18nManager, StatusBar, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, setLoading, resetLoading } from '../redux/slices/authSlice';
 import colors from '../Utils/colors';
-import { logoutBeforeCompanySelectionApi } from '../services/auth';
+import { logoutBeforeCompanySelectionApi, acceptTermsAndConditionsApi } from '../services/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
+import { useState } from 'react';
+import CheckBox from '@react-native-community/checkbox';
 
 const ResetPasswordScreen = ({ navigation, route }) => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const { userProfile } = useSelector(state => state.auth);
     const { language } = useSelector(state => state.language);
+    const [agree, setAgree] = useState(false);
 
     useEffect(() => {
         console.log('isResetPassswordTriggered------------', userProfile.tenantid);
@@ -27,6 +30,31 @@ const ResetPasswordScreen = ({ navigation, route }) => {
         return { langid: lngId, userid: userProfile?.userId, session: userProfile?.session, tenantid: userProfile?.tenantid };
     }
 
+    const agreeWithTerms = async () => {
+        const body = {
+            "userId": userProfile?.userId,
+            "tacAccepted": true
+        }
+
+        const headers = await getHeader();
+        console.log('header', headers);
+        dispatch(setLoading());
+        const res = await acceptTermsAndConditionsApi(body, headers);
+        if (res && res.code == 200) {
+            console.log('AgreeTermCondition--------------', res);
+            navigation?.replace('SetPasswordScreen');
+        } else {
+            Toast.show({
+                type: 'error', // 'error', 'info' can also be used
+                text1: res?.btiMessage?.message || t('error'),
+                text2: t('error') + '!',
+            });
+            dispatch(logout());
+            navigation?.replace('Login');
+        }
+
+    };
+
     const logoutFunc = async () => {
         try {
             dispatch(setLoading());
@@ -37,14 +65,16 @@ const ResetPasswordScreen = ({ navigation, route }) => {
             if (data) {
                 dispatch(logout());
                 navigation?.replace('Login');
+                const msg = data.code == 200 ? 'success' : 'error';
                 Toast.show({
-                    type: 'success', // 'error', 'info' can also be used
-                    text1: data?.btiMessage?.message || t('success'),
-                    text2: t('success') + '!',
+                    type: msg, // 'error', 'info' can also be used
+                    text1: data?.btiMessage?.message || t(msg),
+                    text2: t(msg) + '!',
                 });
             }
         } catch (error) {
             dispatch(logout());
+            navigation?.replace('Login');
             Toast.show({
                 type: 'error', // 'error', 'info' can also be used
                 text1: t('serverErrorText'),
@@ -721,7 +751,28 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                         5. This usage agreement shall not be canceled except by a decision issued by the management of (Bawader International Trust Co. Ltd.).
                     </Text>
                 </View>
-                <Button title={'Logout'} onPress={logoutFunc} />
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginVertical: 20 }}>
+                    <CheckBox
+                        value={agree}
+                        onValueChange={() => setAgree(!agree)}
+                        style={{ margin: 0 }}
+                        tintColors={{ true: colors.secondary, false: colors.grey }} // Toggle checkbox state
+                    />
+                    <Text style={{ ...styles.description, flex: 1, marginHorizontal: 10, textAlign: 'left' }}>{'Yes, I accept and agree to the Terms and Conditions'}{' | '}{'نعم، أقبل جميع الشروط والأحكام وأوافق عليها'}
+                    </Text>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity style={[{ ...styles.btnStyle, backgroundColor: colors.success }, !agree && { opacity: .7 }]}
+                        onPress={() => agree && agreeWithTerms()}
+                    >
+                        <Text style={styles.btnStyleText}>{t('ok')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ ...styles.btnStyle, backgroundColor: colors.danger }}
+                        onPress={logoutFunc}
+                    >
+                        <Text style={styles.btnStyleText}>{t('cancel')}</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
             {/* Add more UI elements */}
         </ScrollView >
@@ -757,6 +808,16 @@ const styles = StyleSheet.create({
         // fontWeight: 'bold',
         color: colors.black
     },
+    btnStyle: {
+        flex: 1,
+        marginHorizontal: 5,
+        borderRadius: 5
+    },
+    btnStyleText: {
+        color: colors.white,
+        textAlign: 'center',
+        padding: 10,
+    }
 });
 
 export default ResetPasswordScreen;
