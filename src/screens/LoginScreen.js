@@ -201,7 +201,6 @@ const LoginScreen = ({ navigation }) => {
                 await AsyncStorage.setItem('email', response.result.customerEmail);
 
                 const data = await getCustomerByEmailApi({ 'email': response.result.customerEmail }, headers);
-                console.log(data);
                 if (data.code === 200) {
                     if (!data.result.allowOnlinePortal || data.code === 400) {
 

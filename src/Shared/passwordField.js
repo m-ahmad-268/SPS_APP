@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
+        color: colors.black,
         paddingVertical: 10,
         paddingHorizontal: 5,
         textAlign: I18nManager.isRTL ? 'right' : 'left',
