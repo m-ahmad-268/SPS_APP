@@ -36,7 +36,6 @@ const Dashboard = ({ navigation, route }) => {
         <View style={[styles.container, { flexDirection: 'row' }]}>
             {/* <Text style={styles.text}>{t('SAR')}</Text> */}
             {/* <Text style={styles.text}>{'طشسيشسيشس'}</Text> */}
-            {/* <LanguageSwitcher></LanguageSwitcher> */}
             {/* <Button title={'Page Refresh'} onPress={() => dispatch(setToken())} /> */}
         </View>
     );

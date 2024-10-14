@@ -11,6 +11,7 @@ import ArrowUp from '../assets/icons/arrowUp.svg';
 import '../i18n/i18n';
 import colors from '../Utils/colors';
 import { useTranslation } from 'react-i18next';
+import { setLoading } from '../redux/slices/authSlice';
 
 const LanguageSwitcher = ({ styleProp }) => {
     const dispatch = useDispatch();
@@ -24,7 +25,6 @@ const LanguageSwitcher = ({ styleProp }) => {
     ];
 
     const switchLanguage = (lang) => {
-        dispatch(setLanguage(lang));
         if (lang === 'ar') {
             I18nManager.forceRTL(true);
         } else {
@@ -33,12 +33,15 @@ const LanguageSwitcher = ({ styleProp }) => {
         RNRestart.Restart(); // Restart the app to apply RTL changes
     };
 
-    const handleLanguageChange = (code) => {
+    const handleLanguageChange = async (code) => {
         // setSelectedLanguage(code);
-        switchLanguage(code);
-        setDropdownOpen(false);
+        // console.log(code);
+        dispatch(setLanguage(code));
+        setTimeout(() => {
+            switchLanguage(code);
+            setDropdownOpen(false);
+        }, 1000)
     };
-
     return (
         <View style={[styles.dropdownContainer, styleProp]}>
             <TouchableOpacity style={styles.dropdownHeader} onPress={() => setDropdownOpen(!dropdownOpen)}>
@@ -70,13 +73,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         // alignSelf: 'flex-end',
         // margin: 20,
-        // backgroundColor: 'red',
         // alignItems: 'flex-end',
     },
     dropdownHeader: {
         padding: 10,
         flexDirection: 'row',
-        // alignItems: 'center',
+        justifyContent: 'left',
     },
     selectedText: {
         fontSize: 16,

@@ -9,9 +9,9 @@ export default CustomHeader = ({ navigation, headerTitle }) => {
             color: colors.white
         },
         haederRow: {
-            height: 50,
+            height: 55,
             alignItems: 'center',
-            justifyContent: 'space-between',
+            // justifyContent: 'space-between',
             backgroundColor: colors.secondary,
             paddingHorizontal: 10,
             flexDirection: 'row',
@@ -34,9 +34,9 @@ export default CustomHeader = ({ navigation, headerTitle }) => {
                 {/* <Text style={{ backgroundColor: 'red', fontSize: 15 }}>{'logout'}</Text> */}
             </TouchableOpacity>
             <Text style={styles.headerStyle}>{headerTitle}</Text>
-            <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
+            {/* <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
                 <Text style={styles.headerRight}>{'logout'}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </View>
     );
 
