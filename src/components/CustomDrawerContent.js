@@ -60,10 +60,10 @@ const CustomDrawerContent = (props) => {
             // labelStyle={styles.labelStyle}  // Custom label styling
             />
 
-            <DrawerItem label={t('logout')}
+            {/* <DrawerItem label={t('logout')}
                 inactiveTintColor={colors.primary}
                 onPress={logoutFunc} />
-            <LanguageSwitcher styleProp={styles.languageStyle} />
+            <LanguageSwitcher styleProp={styles.languageStyle} /> */}
         </DrawerContentScrollView>
     );
 };

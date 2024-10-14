@@ -40,7 +40,7 @@ const DrawerNavigator = ({ navigation }) => {
     return (
         <Drawer.Navigator
             key={0}
-            initialRouteName={fields?.['DASHBOARD']?.fieldValue || 'Dashboard'}
+            initialRouteName={fields?.['QUOTATION']?.fieldValue || 'Quotation'}
             drawerContent={(props) => <CustomDrawerContent {...props} />}
             screenOptions={{
                 drawerActiveTintColor: colors.secondary,

@@ -1,6 +1,6 @@
 // /screens/SettingsScreen.js
 import React, { useCallback, useEffect } from 'react';
-import { View, Button, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLanguage } from '../redux/slices/languageSlice';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,9 @@ import RNRestart from 'react-native-restart';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { setToken } from '../../redux/slices/authSlice';
+import { Button } from 'react-native-paper';
+import ArrowUp from '../../assets/icons/arrowUp.svg';
+import colors from '../../Utils/colors';
 
 const AllQuotationScreen = () => {
     const dispatch = useDispatch();
@@ -56,7 +59,11 @@ const AllQuotationScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.title} >Hello Quotation Screen</Text>
-        </ScrollView>
+
+            <Button icon={() => <ArrowUp />} style={{ backgroundColor: 'purple', color: colors.white }} mode="contained" onPress={() => console.log('Pressed')}>
+                Press me
+            </Button>
+        </ScrollView >
     );
 };
 

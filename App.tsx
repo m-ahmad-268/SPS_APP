@@ -7,6 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { NavigationContainer } from '@react-navigation/native';
 import { ActivityIndicator, AppState, Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 
 import Toast from 'react-native-toast-message';
@@ -25,12 +26,14 @@ const App = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={<Loading />} persistor={persistor}>
-        <SafeAreaView style={{ backgroundColor: colors.primary, flex: 1 }}>
-          <NavigationContainer>
-            <MainApp />
-          </NavigationContainer>
-          <Toast />
-        </SafeAreaView>
+        <PaperProvider>
+          <SafeAreaView style={{ backgroundColor: colors.primary, flex: 1 }}>
+            <NavigationContainer>
+              <MainApp />
+            </NavigationContainer>
+            <Toast />
+          </SafeAreaView>
+        </PaperProvider>
       </PersistGate>
     </Provider >
   );
