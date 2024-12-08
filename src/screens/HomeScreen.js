@@ -4,9 +4,6 @@ import { View, Button, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLanguage } from '../redux/slices/languageSlice';
 import { useTranslation } from 'react-i18next';
-import { I18nManager } from 'react-native';
-import RNRestart from 'react-native-restart';
-import { setToken } from '../redux/slices/authSlice';
 import { useFocusEffect } from '@react-navigation/native';
 
 const HomeScreen = () => {
@@ -23,7 +20,7 @@ const HomeScreen = () => {
             // Add logic for focus actions if necessary
             return () => {
                 console.log('--------------------------------------HomescreenTriggered unfocused');
-                dispatch(setToken()); // Clean-up or reset logic
+                // Clean-up or reset logic
             };
         }, [userProfile])
     );

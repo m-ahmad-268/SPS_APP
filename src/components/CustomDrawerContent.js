@@ -8,17 +8,37 @@ import colors from '../Utils/colors';
 import { BackHandler, StyleSheet, Text, View } from 'react-native';
 import { logoutApi } from '../services/auth';
 import LanguageSwitcher from './LanguageSwitcher';
+import { useFocusEffect, useNavigationState } from '@react-navigation/native';
 
 const CustomDrawerContent = (props) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { isAuthenticated, userProfile } = useSelector((state) => state.auth);
     const { language } = useSelector((state) => state.language);
+    const navigationState = props.navigation.getState();
+    let activeRouteName = '';
 
-    useEffect(() => {
-        console.log('helloCustomDrawer-------------------');
+    if (navigationState?.routes) {
+        const nestedState = navigationState.routes.find(route => route.state)?.state;
+        if (nestedState) {
+            // Get the active route from the nested stack navigator
+            const activeIndex = nestedState.index;
+            activeRouteName = nestedState.routes[activeIndex].name;
+        } else {
+            // Fallback if there is no nested state
+            activeRouteName = navigationState.routes[navigationState.index].name;
+        }
+    }
+    const isActiveRoute = (routeName) => activeRouteName === routeName;
 
-    }, [])
+    useFocusEffect(() => {
+        // console.log('helloCustomDrawer-------------------');
+
+        // Function to determine if a route is active
+        // const isActiveRoute = (routeName) => activeRouteName === routeName;
+        // console.log('roiutee',isActiveRoute);
+
+    })
 
     const logoutFunc = async () => {
         try {
@@ -50,20 +70,31 @@ const CustomDrawerContent = (props) => {
     })
 
     return (
-        <DrawerContentScrollView {...props}>
-            <DrawerItemList {...props}
+        <DrawerContentScrollView {...props} style={{ marginVertical: 20 }}>
+            {/* <DrawerItemList {...props}
                 activeTintColor={'white'}  // Active item text color
                 inactiveTintColor={colors.primary} // Inactive item text color
                 activeBackgroundColor="yellow"  // Active item background color
-            // itemStyle={{ color: 'red' }}
-            //  // Custom item styling
-            // labelStyle={styles.labelStyle}  // Custom label styling
-            />
-
-            {/* <DrawerItem label={t('logout')}
-                inactiveTintColor={colors.primary}
+            /> */}
+            <DrawerItem label={props.fields?.['DASHBOARD']?.fieldValue || 'Dashboard'}
+                labelStyle={[isActiveRoute('dashboard') ? { color: colors.secondary } : { color: colors.primary }]}
+                onPress={() => props.navigation.navigate('dashboard')} />
+            <DrawerItem label={props.fields?.['PROFILE_INFORMATION']?.fieldValue || 'Profile Information'}
+                labelStyle={[isActiveRoute('profile') ? { color: colors.secondary } : { color: colors.primary }]}
+                onPress={() => props.navigation.navigate('profile')} />
+            <DrawerItem label={t('quotation')}
+                labelStyle={[isActiveRoute('AllQuotationScreen') ? { color: colors.secondary } : { color: colors.primary }]}
+                onPress={() => props.navigation.navigate('AllQuotationScreen')} />
+            <DrawerItem label={t('order')}
+                labelStyle={[isActiveRoute('AllOrderScreen') ? { color: colors.secondary } : { color: colors.primary }]}
+                onPress={() => props.navigation.navigate('AllOrderScreen')} />
+            <DrawerItem label={t('invoices')}
+                labelStyle={[isActiveRoute('AllInvoicesScreen') ? { color: colors.secondary } : { color: colors.primary }]}
+                onPress={() => props.navigation.navigate('AllInvoicesScreen')} />
+            <LanguageSwitcher styleProp={styles.languageStyle} />
+            <DrawerItem label={t('logout')}
+                labelStyle={[isActiveRoute('logout') ? { color: colors.secondary } : { color: colors.primary }]}
                 onPress={logoutFunc} />
-            <LanguageSwitcher styleProp={styles.languageStyle} /> */}
         </DrawerContentScrollView>
     );
 };

@@ -4,16 +4,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import AuthStack from './AuthStack';
 import DrawerNavigator from './DrawerNavigator';
 import { ActivityIndicator, AppState, StatusBar, Image, StyleSheet, Text, View } from 'react-native';
-import { checkSession, login, refreshToken } from '../redux/slices/authSlice';
+import { checkSession, login, logout, refreshToken, setLoading, setRefreshToken } from '../redux/slices/authSlice';
 import NetInfo from '@react-native-community/netinfo';[]
 import Toast from 'react-native-toast-message';
 import colors from '../Utils/colors';
 import FastImage from 'react-native-fast-image';
 import { useFocusEffect } from '@react-navigation/native';
+import { updateActiveSession } from '../services/auth';
 
-const RootNavigator = () => {
+const RootNavigator = ({ navigation, route }) => {
     const dispatch = useDispatch();
-    const { token, isAuthenticated, isLoading } = useSelector((state) => state.auth);
+    const { token, isAuthenticated, isLoading, userProfile, refreshToken } = useSelector((state) => state.auth);
+    const { language } = useSelector((state) => state.language);
+
 
     // const [appState, setAppState] = useState(AppState.currentState);
     // const [isConnected, setIsConnected] = useState(true);
@@ -58,11 +61,34 @@ const RootNavigator = () => {
     //         unsubscribeNetInfo();
     //     };
     // }, []);
+    const getHeader = async () => {
+        const lngId = language == 'ar' ? '2' : '1';
+        return { langid: lngId, userid: userProfile?.userId, session: userProfile?.session, tenantid: userProfile?.tenantid };
+    }
+
+    const updateSession = async () => {
+        // Clear the old interval first
+        // clearSessionInterval();
+        let header = await getHeader();  // Fetch updated header
+        if (header && header?.userid && header?.session) {
+            const req = { userId: header.userid, session: header.session };
+            const res = updateActiveSession(req, header);
+            dispatch(checkSession());
+            // Set the new interval
+        } else {
+            dispatch(logout());  // Logout if the header is invalid
+        }
+    };
 
     useEffect(() => {
         console.log('RootNavigator-------------Authenticated', isAuthenticated);
-        console.log('RootNavigator--------------isLoading', isLoading);
-        dispatch(checkSession());
+        let authInterval;
+        if (isAuthenticated) {
+            authInterval = setInterval(() => {
+                updateSession();
+
+            }, 50000)
+        }
         // console.log('yooooooooooooooooo', isLoading);
         // console.log('yooooooooooooooooo', token);
         // if (token) {
@@ -70,7 +96,10 @@ const RootNavigator = () => {
 
         //     dispatch(refreshToken());
         // }
-    }, [dispatch, isAuthenticated, token]);
+
+        return () => clearInterval(authInterval);
+    }, [isAuthenticated]);
+    // }, [dispatch, isAuthenticated, token]);
 
     return (
         <>
@@ -82,7 +111,7 @@ const RootNavigator = () => {
             {isLoading && <View style={styles.loader}>
                 <FastImage
                     source={require('../assets/images/Ripple-1s-200px.gif')} // Local GIF
-                    style={{ width: 80, height: 80 }}
+                    style={{ width: 80, height: 80, opacity: .9 }}
                     resizeMode={FastImage.resizeMode.cover}
                 />
                 {/* <ActivityIndicator size="large" /> */}
@@ -111,8 +140,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         justifyContent: 'center',
         alignItems: 'center',
-        opacity: .9,
-        backgroundColor: 'rgba(0, 0, 0, 0.1)'
+        opacity: .7,
+        backgroundColor: colors.primary
     }
 });
 export default RootNavigator;

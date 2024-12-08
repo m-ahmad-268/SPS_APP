@@ -17,5 +17,8 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
     }
 }
+project.ext.react = [
+enableHermes: true,  // <- Hermes enabled
+]
 
 apply plugin: "com.facebook.react.rootproject"

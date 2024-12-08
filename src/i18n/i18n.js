@@ -5,10 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import store from '../redux/store';
 import { loadLanguage } from '../redux/slices/languageSlice';
 
+
 // Import language files
 // import en from './locales/en.json';
 // import ar from './locales/ar.json';
-
 const resources = {
     en: {
         translation: {
@@ -19,10 +19,39 @@ const resources = {
             "success": "Success",
             "error": "Error",
             "logout": "Logout",
-            "cancel": "Cancel",
+            "CANCEL": "Cancel",
             "ok": "Ok",
             "submit": "Submit",
-
+            "NO_DATA_TO_DISPLAY": "No data to display",
+            "invoices": "Invoices",
+            "quotation": "Quotation",
+            "order": "Order",
+            "draft": "Draft",
+            "delivered": "Delivered",
+            "SAR": "SAR",
+            "search": "Search",
+            "select": "Select",
+            "save": "Save",
+            "PLEASE_FILL_COMPLETE_DATA": "Please Fill Complete Data",
+            "CUSTOMER_NOT_FOUND": "Customer Not Found",
+            "confirmation": "Confirmation",
+            "COMPARED_TO_LAST_MONTH": "compared to last month",
+            'update': 'Update',
+            'clear': 'Clear',
+            'map': 'Map',
+            'allowedFileType': "Allowed File Type",
+            'MaximumAllowedSize': "Maximum Allowed Size",
+            'MAXIMUM_ALLOWED_FILE_OR_IMAGE_SIZE': 'Maximum Allowed File Or Image Size',
+            'DRAFT': 'Draft',
+            'SUBMITTED': 'Submitted',
+            'APPROVED': 'Approved',
+            'Rejected': 'REJECTED',
+            'ACCEPTED': 'Accepted',
+            'DELIVERED': 'Delivered',
+            'RETURN_REQUEST_SUBMITTED': 'Return Request Submitted',
+            'delete': 'Delete',
+            'cancel_transaction': 'Cancel Transaction',
+            'print': 'Print',
         }
     },
     ar: {
@@ -34,12 +63,42 @@ const resources = {
             "success": "نجاح",
             "error": "خطأ",
             "logout": "تسجيل خروج",
-            "cancel": "إلغاء",
+            "CANCEL": "إلغاء",
             "ok": "حسنا",
             "submit": "رفع",
+            "NO_DATA_TO_DISPLAY": "لا توجد بيانات لعرض",
+            "invoices": "الفواتير",
+            "quotation": "عرض سعر",
+            "order": 'طلب',
+            "draft": "مسودة",
+            "delivered": "تم التوصيل",
+            "SAR": "ريال",
+            "search": "بحث",
+            "select": "تحديد",
+            "save": "حفظ",
+            "PLEASE_FILL_COMPLETE_DATA": "الرجاء تعبئة البيانات كاملة",
+            "CUSTOMER_NOT_FOUND": "لم يتم العثور على العميل",
+            "confirmation": "تأكيد",
+            "COMPARED_TO_LAST_MONTH": "مقارنة بالشهر الماضي",
+            "update": "تحديث",
+            "clear": "واضح",
+            "map": "رسم خريطة",
+            "allowedFileType": "نوع الملف المسموح به",
+            'MaximumAllowedSize': "الحجم الأقصى المسموح به",
+            'MAXIMUM_ALLOWED_FILE_OR_IMAGE_SIZE': "الحد الأقصى المسموح به لحجم الملف أو الصورة",
+            'ACCEPTED': "مقبول",
+            'REJECTED': "مرفوض",
+            'APPROVED': "تمت الموافقة",
+            'SUBMITTED': "مُقَدَّم",
+            'DELIVERED': "تم التوصيل",
+            'DRAFT': "مسودة",
+            'print': "طباعة",
+            'cancel_transaction': "إلغاء الحركة",
+            'delete': "حذف",
         }
     }
 };
+
 
 // resources: {
 //     en: { translation: en },
@@ -67,7 +126,7 @@ store.subscribe(() => {
 const initializeLanguage = async () => {
     const storedLanguage = await AsyncStorage.getItem('user-language');
     if (storedLanguage) {
-        // store.dispatch(loadLanguage(storedLanguage));
+
     }
 };
 

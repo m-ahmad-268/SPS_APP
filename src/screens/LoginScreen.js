@@ -2,38 +2,67 @@
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, Text, StyleSheet, Button, TouchableOpacity, I18nManager } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, logout, resetLoading, setLoading, setToken, setUserData } from '../redux/slices/authSlice';
+import { checkSession, login, logout, resetLoading, setLoading, setRemember, setToken, setUserData } from '../redux/slices/authSlice';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { i18n } from '../i18n';
 import Toast from 'react-native-toast-message';
-import { loginUserForOtp, verifyOtpAuthentication, setScreenFieldsData, companyListByUserId, checkCompanyAccess, getRolesByEmail, getCustomerByEmailApi } from '../services/auth';
+import { loginUserForOtp, verifyOtpAuthentication, setScreenFieldsData, companyListByUserId, checkCompanyAccess, getRolesByEmail, getCustomerByEmailApi, logoutApi } from '../services/auth';
 // import { showToast } from '../Utils/toast.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateEmail, validatePassword } from '../Utils/validattion';
 import { ScrollView } from 'react-native-gesture-handler';
 import colors from '../Utils/colors';
 import PasswordField from '../Shared/passwordField';
+import CheckBox from '@react-native-community/checkbox';
+import CustomPopup from '../Shared/CustomPopup';
 // import Icon from 'react-native-vector-icons/Ionicons'; 
 // Arrow Icon
 
 const LoginScreen = ({ navigation }) => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const { isLoading, token, error, isAuthenticated, userProfile } = useSelector((state) => state.auth);
-    const [email, setEmail] = useState('');
+    const { isLoading, token, error, isAuthenticated, userProfile, remember } = useSelector((state) => state.auth);
+    const [email, setEmail] = useState(remember ? remember?.email : '');
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoader, setIsLoader] = useState(false);
     const [fields, setFields] = useState(null);
     const [response, setResponse] = useState(null);
-    const [password, setPassword] = useState('');
+    const [password, setPassword] = useState(remember ? remember?.pass : '');
+    const [rememberMe, setRememberMe] = useState(remember ? true : false);
     const isRTL = I18nManager.isRTL;
     const currentLanguage = useSelector((state) => state.language.language);
+    const [isPopupVisible, setPopupVisible] = useState(false);
 
-    const logoutFunc = () => {
-        // dispatch(logout());
-        console.log('HelloLogout');
+    const showPopup = () => setPopupVisible(true);
+    const hidePopup = () => setPopupVisible(false);
 
+    const handleConfirm = () => {
+        hidePopup();
+        logoutFunc();
+    };
+
+    const getHeader = async () => {
+        const lngId = currentLanguage == 'ar' ? '2' : '1';
+        return { langid: lngId, userid: userProfile?.userId, session: userProfile?.session, tenantid: userProfile?.tenantid };
+    }
+
+    const logoutFunc = async () => {
+        try {
+            dispatch(setLoading());
+            const headers = await getHeader();
+            const data = await logoutApi({ userId: userProfile?.userId }, headers);
+            if (data) {
+                dispatch(logout());
+                dispatch(resetLoading());
+
+            }
+            // console.log(data);
+        } catch (error) {
+            dispatch(logout());
+            dispatch(resetLoading());
+            console.log('LogoutError', error);
+        }
     }
 
     const setScreenFieldsDataApi = async () => {
@@ -56,8 +85,24 @@ const LoginScreen = ({ navigation }) => {
         console.log('LoginTriggerdField--------------------------', isAuthenticated);
         dispatch(setLoading());
         setScreenFieldsDataApi();
+    }, []);
 
-    }, [])
+    useEffect(() => {
+        let activeSession;
+        const sessionExist = async () => {
+            const getData = await AsyncStorage.getItem('currentUser') || '{}';
+            const activeUser = JSON.parse(getData);
+            if (!isAuthenticated && activeUser?.session) {
+                activeSession = setInterval(() => {
+                    dispatch(checkSession());
+                }, 2000);
+            }
+        }
+        sessionExist();
+
+        return () => clearInterval(activeSession);
+    }, [isAuthenticated])
+
     const verifyOtpForCompanySelection = async (verifyOtpForm) => {
 
         console.log('stop2-------------', verifyOtpForm.userId);
@@ -117,10 +162,8 @@ const LoginScreen = ({ navigation }) => {
                         // this.allCompanies = data.result;
                         if (data.result && data?.result?.length == 1) {
                             if (data?.result[0]?.companyId) {
-                                proceed(data?.result[0]?.companyId, currentUser)
-                                console.log('currentCompany', data?.result[0]?.name);
-
-                                AsyncStorage.setItem('currentCompany', data?.result[0]?.name);
+                                proceed(data?.result[0]?.companyId, currentUser);
+                                dispatch(setUserData({ currentCompany: data?.result[0]?.name }));
                             }
                         }
                         else {
@@ -233,18 +276,23 @@ const LoginScreen = ({ navigation }) => {
                         dispatch(setUserData({ siteId: siteId, priceLevel: priceLevelId, customerId: customerId }))
                         if (!!response.result.roles[0].path) {
                             console.log(response.result.roles[0].path);
-                            dispatch(setToken());
+                            setTimeout(() => {
+                                Toast.hide();
+                                dispatch(checkSession());
+                            }, 2000);
 
                             // this.router.navigate([response.result.roles[0].path]);
                         }
                     }
                 } else if (data.code === 400) {
                     console.log(' this.logOutPopUp();121212');
-                    // this.logOutPopUp();
+                    dispatch(resetLoading());
+                    showPopup();
                 }
             } else {
                 console.log(' this.logOutPopUp();');
-                // this.logOutPopUp();
+                dispatch(resetLoading());
+                showPopup();
             }
         } catch (error) {
             console.log('validateUser', error);
@@ -299,6 +347,7 @@ const LoginScreen = ({ navigation }) => {
         // dispatch(login({ userName: 'chinese.creativity.foundation@gmail.com', password: 'mind@123', fireBaseToken: null }));
 
         try {
+
             if (!validateEmail(email)) {
                 setErrorMsg(fields?.['PLEASE_ENTER_VALID_EMAIL']?.fieldValue || 'Please Enter valid email');
                 return;
@@ -319,6 +368,7 @@ const LoginScreen = ({ navigation }) => {
             const data = await loginUserForOtp(reqBody);
             console.log(data);
             if (data) {
+                rememberMe ? dispatch(setRemember({ email: email, pass: password })) : dispatch(setRemember(null));
                 // let newHeaders = new HttpHeaders();
                 // const userData = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser') || '{}') : { session: '', userId: '' };
                 // newHeaders = newHeaders.append('session', userData.session);
@@ -561,8 +611,8 @@ const LoginScreen = ({ navigation }) => {
 
     return (
         <ScrollView style={styles.container}>
-            <LanguageSwitcher styleProp={{ top: 50, right: 0, }} />
-            {fields && <View style={{ marginVertical: 180, }}>
+            <LanguageSwitcher styleProp={{ top: 50, right: 0, width: 100 }} />
+            {fields && <View style={{ marginVertical: 180 }}>
                 {/* <Text style={{ fontSize: 40, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>{t('welcome')}</Text> */}
                 <Text style={{ fontSize: 35, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>{fields?.['LOGIN']?.fieldValue || 'Login'}</Text>
                 <Text style={{ fontSize: 22, fontWeight: '400', textAlign: 'center', color: 'grey', marginBottom: 20, }}>
@@ -583,6 +633,21 @@ const LoginScreen = ({ navigation }) => {
                     placeholder={fields?.['PASSWORD']?.fieldValue || 'Password'}
                 />
                 {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
+                <View style={{ padding: 8, flexDirection: 'row', alignItems: 'center', }}>
+                    <CheckBox
+                        value={rememberMe}
+                        onValueChange={() => setRememberMe(!rememberMe)}
+                        style={{ margin: 0 }}
+                        tintColors={{ true: colors.secondary, false: colors.grey }} // Toggle checkbox state
+                    />
+                    <Text style={{ color: colors.grey }}>
+                        {fields?.['REMEMBER_ME']?.fieldValue || 'Remember Me'}
+                    </Text>
+                    {/* <TouchableOpacity style={{ alignItems: 'flex-end', flex: 1, }}>
+                        <Text style={{ color: colors.secondary }}>
+                            {fields?.['FORGET_PASSWORD']?.fieldValue || 'Forget Password?'}</Text>
+                    </TouchableOpacity> */}
+                </View>
                 <TouchableOpacity style={[styles.input, isLoader ? { backgroundColor: 'lightgrey' } : { backgroundColor: 'black' }]}
                     disabled={isLoader} onPress={handleLogin}
                 >
@@ -590,6 +655,14 @@ const LoginScreen = ({ navigation }) => {
                 </TouchableOpacity>
                 {/* <Button title={isLoading ? 'Logging in...' : 'Login'} disabled={isLoading} /> */}
             </View>}
+            <CustomPopup
+                visible={isPopupVisible}
+                onClose={hidePopup}
+                onConfirm={handleConfirm}
+                title={t('CUSTOMER_NOT_FOUND')}
+                confirmText={t('logout')}
+                cancelText={t('cancel')}
+            />
         </ScrollView >
     );
 };

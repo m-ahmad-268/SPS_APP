@@ -71,6 +71,7 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
+def enableHermes = project.hasProperty("react") && project.react.containsKey("enableHermes") ? project.react.enableHermes : false;
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -105,15 +106,38 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    // Move project.ext.vectoricons and apply statement outside of buildscript
+project.ext.vectoricons = [
+    iconFontNames: ['MaterialIcons.ttf', 'FontAwesome.ttf'] // Add more icon fonts if needed
+]
+
 }
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+// dependencies {
+//     // The version of react-native is set by the React Native Gradle Plugin
+//     implementation("com.facebook.react:react-android")
+
+//     if (hermesEnabled.toBoolean()) {
+//         implementation("com.facebook.react:hermes-android")
+//     } else {
+//         implementation jscFlavor
+//     }
+// }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation 'com.facebook.flipper:flipper:0.125.0'
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
+    // Add Hermes or JSC based on configuration
+    if (enableHermes) {
+        implementation("com.facebook.react:hermes-engine:+")
     } else {
         implementation jscFlavor
     }
+
+    // Additional dependencies
+    implementation fileTree(dir: "libs", include: ["*.jar"])
 }

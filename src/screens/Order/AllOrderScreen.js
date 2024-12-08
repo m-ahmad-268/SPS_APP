@@ -1,13 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, FlatList, ScrollView, Dimensions } from 'react-native';
+// /screens/SettingsScreen.js
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLanguage } from '../redux/slices/languageSlice';
 import { useTranslation } from 'react-i18next';
 import { I18nManager } from 'react-native';
 import RNRestart from 'react-native-restart';
 import { useFocusEffect } from '@react-navigation/native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { resetLoading, setLoading, setToken } from '../../redux/slices/authSlice';
-import { Button } from 'react-native-paper';
+import { ActivityIndicator, Button } from 'react-native-paper';
 import ArrowUp from '../../assets/icons/arrowUp.svg';
 import colors from '../../Utils/colors';
 import { DataTable } from 'react-native-paper';
@@ -15,16 +17,16 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { IconButton } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import CustomPagination from '../../Shared/CustomPagination';
-import { getGraphData, searchCustomerQutationCount, searchQuotationsByCustomer, deleteCustomerOrder } from '../../services/drawerService';
+import { deleteCustomerOrder, getGraphData, searchCustomerOrderCount, searchOrderByCustomer } from '../../services/drawerService';
 import CustomFlaglist from '../../Shared/CustomFlaglist';
 import { setScreenFieldsData } from '../../services/auth';
+import LineChartComponent from '../../Shared/LineChartComponent';
 import ItemLoader from '../../Shared/ItemLoader';
+import SimpleLineChartComponent from '../../Shared/SimpleLineChartComponent';
 import CustomPopup from '../../Shared/CustomPopup';
 import StructureModal from '../../Shared/structureModal';
-import SimpleLineChartComponent from '../../Shared/SimpleLineChartComponent';
-// import LineChartComponent from '../../Shared/LineChartComponent';
 
-const AllQuotationScreen = ({ navigation, route }) => {
+const AllOrderScreen = ({ navigation, route }) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { i18n } = useTranslation();
@@ -33,12 +35,13 @@ const AllQuotationScreen = ({ navigation, route }) => {
     const [page, setPage] = useState(0);
     const [numberOfItemsPerPageList] = useState([2, 3, 4]);
     const [fields, setFields] = useState(null);
-    const [quotationCounts, setQuotationCounts] = useState(null);
-    const [quotationGraph, setQuotationGraph] = useState(null);
     const [itemsPerPage, onItemsPerPageChange] = useState(numberOfItemsPerPageList[0]);
     const [hasMore, setHasMore] = useState(true);
+    const [quotationCounts, setQuotationCounts] = useState(null);
+    const [quotationGraph, setQuotationGraph] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [allData, setAllDate] = useState([]);
+    const [recordIds, setRecordIds] = useState([]);
     const [isPopupVisible, setPopupVisible] = useState(false);
     const currentRouteName = route.name;
     const [items] = useState([
@@ -62,15 +65,12 @@ const AllQuotationScreen = ({ navigation, route }) => {
         },
         {
             key: 4,
-            name: 'Gingerbread',
+            name: 'Gingerbreadas',
             calories: 305,
             fat: 3.7,
         },
 
     ]);
-    const from = page * itemsPerPage;
-    const to = Math.min((page + 1) * itemsPerPage, items.length);
-    const [recordIds, setRecordIds] = useState([]);
     const [messageArray, setMessageArray] = useState([]);
     const [popupMessage, setPopupMessage] = useState(false);
     const showPopup = () => setPopupVisible(true);
@@ -79,6 +79,8 @@ const AllQuotationScreen = ({ navigation, route }) => {
         hidePopup();
         deleteQuotation();
     };
+    const from = page * itemsPerPage;
+    const to = Math.min((page + 1) * itemsPerPage, items.length);
 
     const getHeader = async () => {
         const lngId = currentLanguage == 'ar' ? '2' : '1';
@@ -99,15 +101,52 @@ const AllQuotationScreen = ({ navigation, route }) => {
             dispatch(resetLoading());
             console.error('Server error:', error);
         }
-    }
+    };
+
+    const GraphData = async () => {
+        try {
+            dispatch(setLoading());
+            const headers = await getHeader();
+            const body = {
+                customerId: String(userProfile.customerNo),
+                'orderType': 2,
+            }
+            const res = await getGraphData(body, headers);
+            if (res && res.code == 200 && res?.result) {
+                const responseData = res.result;
+                setQuotationGraph({ ...responseData });
+
+                const tempObj = {
+                    ...responseData,
+                    labels: responseData?.allData?.categories?.length ? responseData?.allData?.categories : [],
+                    datasets: [
+                        {
+                            data: responseData?.allData?.data?.length ? responseData?.allData?.data : [],
+                        }
+
+                    ]
+
+                };
+
+            }
+            dispatch(resetLoading());
+
+
+        } catch (error) {
+            console.log('GraphData----------------', error);
+            dispatch(resetLoading());
+
+        }
+    };
 
     useEffect(() => {
-        if (!fields) {
+        console.log('TOKN-------------------', token);
+
+        if (!fields)
             setScreenFieldsDataApi();
-        }
         fetchData();
+        CustomerOrderCount();
         GraphData();
-        CustomerQutationCount();
     }, [token]);
 
     const fetchData = async (type) => {
@@ -120,7 +159,7 @@ const AllQuotationScreen = ({ navigation, route }) => {
                 customer: {
                     custnumber: userProfile.customerNo
                 },
-                "statusType": type || 'DRAFT',
+                "statusTypeOrder": type || 'DRAFT',
                 'searchKeyword': searchKeyword,
                 'pageNumber': page,
                 'pageSize': 1000,
@@ -130,8 +169,8 @@ const AllQuotationScreen = ({ navigation, route }) => {
                 'transactionDate': date,
                 'orderRefId': null,
             }
-            const response = await searchQuotationsByCustomer(body, headers);
-            console.log(response.result.records.length);
+            const response = await searchOrderByCustomer(body, headers);
+            console.log(response.code);
             if (response && (response.code == 200 || response.code == 201) && response?.result?.records && response.result.records?.length) {
                 const arr = response.result.records.map((x, index) => {
                     const rand = Math.random() * (100 - 1 + 1) + 1;
@@ -195,11 +234,10 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         ]
                     }
                 })
-                setAllDate(arr);
+                setAllDate([...arr]);
                 dispatch(resetLoading());
             } else {
                 dispatch(resetLoading());
-
             }
 
 
@@ -224,8 +262,7 @@ const AllQuotationScreen = ({ navigation, route }) => {
 
         }
     };
-
-    const CustomerQutationCount = async () => {
+    const CustomerOrderCount = async () => {
         try {
             const headers = await getHeader();
             const body = {
@@ -234,55 +271,25 @@ const AllQuotationScreen = ({ navigation, route }) => {
                 },
                 'searchKeyword': '',
             }
-            const res = await searchCustomerQutationCount(body, headers);
+            const res = await searchCustomerOrderCount(body, headers);
             if (res && res?.result) {
                 const responseData = res.result;
-                setQuotationCounts(responseData);
-                // const arr = [
-                //     {
-                //         "name": fields?.['PEqNDING']?.fieldValue || 'Pending',
-                //         "value": responseData?.totalCountPending || 0,
-                //         color: "#d1462d",
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                //     {
-                //         "name": fields?.['APPROVED'].fieldValue || 'Approved',
-                //         "value": responseData?.totalCountApproved || 0,
-                //         color: "#f26045",
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                //     {
-                //         "name": fields?.['REJECTED']?.fieldValue || 'Rejected',
-                //         "value": responseData?.totalCountRejected || 0,
-                //         color: colors.secondary,
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                //     {
-                //         "name": fields?.['DRAasFT']?.fieldValue || 'Draft',
-                //         "value": responseData.totalCountDraft || 0,
-                //         color: "#fe6d52",
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                //     {
-                //         "name": fields?.['EXPIRED']?.fieldValue || 'Expired',
-                //         "value": responseData?.totalCountExpired || 0,
-                //         color: "#faa795",
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                //     {
-                //         "name": fields?.['CANCELED']?.fieldValue || "Cancelled",
-                //         "value": responseData?.totalCountCanceled || 0,
-                //         color: "#ffb9a8",
-                //         legendFontColor: "#7F7F7F",
-                //         legendFontSize: 15
-                //     },
-                // ];
-                // setQuotationCart([...arr]);
+                setQuotationCounts({ ...responseData });
+                // const tempData = {
+                //     ...responseData,
+                //     labels: [fields?.['PENDaING']?.fieldValue || 'Pending', fields?.['APPROVED'].fieldValue || 'Approved', fields?.['REJECTED']?.fieldValue || 'Rejected', fields?.['DELIVERED']?.fieldValue || 'Delivered'],
+                //     datasets: [
+                //         {
+                //             data: [
+                //                 responseData?.totalCountPending || 0,
+                //                 responseData?.totalCountApproved || 0,
+                //                 responseData?.totalCountRejected || 0,
+                //                 responseData?.totalCountDelivered || 0,
+                //             ]
+                //         }
+                //     ]
+                // };
+
 
             }
 
@@ -291,6 +298,16 @@ const AllQuotationScreen = ({ navigation, route }) => {
             console.log('searchCustomerQutationCount----------------', error);
             dispatch(resetLoading());
 
+        }
+    };
+
+    useEffect(() => {
+        // fetchData(page);
+    }, [page]);
+
+    const loadMore = () => {
+        if (!isLoading && hasMore) {
+            setPage((prevPage) => prevPage + 1);
         }
     };
 
@@ -304,12 +321,13 @@ const AllQuotationScreen = ({ navigation, route }) => {
 
         } else if (item?.grid) {
             const activeItem = item.grid;
-            // console.log('yooo', activeItem.id, activeItem?.status);
-            navigation.navigate('QuotationFormScreen', { id: activeItem.id, status: activeItem?.status })
+            console.log('After clicking on Grid-----', activeItem.id, activeItem?.status);
+            navigation.navigate('OrderFormScreen', { id: activeItem.id, status: activeItem?.status })
 
         }
 
     };
+
     const deleteQuotation = async () => {
         try {
             dispatch(setLoading());
@@ -332,42 +350,20 @@ const AllQuotationScreen = ({ navigation, route }) => {
 
         }
     };
-    const GraphData = async () => {
-        try {
-            dispatch(setLoading());
-            const headers = await getHeader();
-            const body = {
-                customerId: String(userProfile.customerNo),
-                'orderType': 1,
-            }
-            const res = await getGraphData(body, headers);
-            if (res && res.code == 200 && res?.result) {
-                const responseData = res.result;
-                // console.log(responseData);
-                setQuotationGraph({ ...responseData });
 
-                const tempObj = {
-                    ...responseData,
-                    labels: responseData?.allData?.categories?.length ? responseData?.allData?.categories : [],
-                    datasets: [
-                        {
-                            data: responseData?.allData?.data?.length ? responseData?.allData?.data : [],
-                        }
+    // const getClickedId = (item) => {
 
-                    ]
+    //     console.log('HeloooooooooooBTNPressooooooo',);
+    //     return
+    //     if (item?.btn) {
+    //     } else if (item?.grid) {
+    //         const activeItem = item.grid;
+    //         console.log('yooo', activeItem.id);
+    //         navigation.navigate('OrderFormScreen', { id: activeItem.id })
 
-                };
+    //     }
 
-            }
-            dispatch(resetLoading());
-
-
-        } catch (error) {
-            console.log('GraphData----------------', error);
-            dispatch(resetLoading());
-
-        }
-    };
+    // }
 
     // const logoutFunc = async () => {
 
@@ -389,9 +385,8 @@ const AllQuotationScreen = ({ navigation, route }) => {
     // };
 
     return (
-        // <>
         <View style={styles.container}>
-            {/* <CustomHeader navigation={navigation} headerTitle={fields?.['QUOTATION']?.fieldValue || 'Quotation Brother'} /> */}
+            {/* <Text style={styles.title} >{currentRouteName}</Text> */}
             <View>
                 <ScrollView horizontal={true} style={{ minHeight: 250, }}>
                     {/* {!!quotationGraph && <LineChartComponent
@@ -410,7 +405,6 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         title={fields?.['DRAFT_QUOTATION']?.fieldValue || 'Waiting For Submission'}
                         dataCount={quotationCounts?.totalCountDraft}
                     />} */}
-
                     {/* {!!quotationGraph && <LineChartComponent
                         data={{
                             labels: quotationGraph?.submittedData?.categories?.length ? quotationGraph?.submittedData?.categories : [],
@@ -441,7 +435,7 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         disableClick={false}
                         onClick={() => fetchData('PENDING')}
                         comparedValue={quotationGraph?.pendingData?.percentage}
-                        title={fields?.['PENDING_QUOTATION']?.fieldValue || 'Waiting For Approval'}
+                        title={fields?.['PENDING_ORDERS']?.fieldValue || 'Waiting For Approval'}
                         dataCount={quotationCounts?.totalCountPending}
                     />} */}
 
@@ -458,25 +452,24 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         disableClick={false}
                         onClick={() => fetchData('APPROVED')}
                         comparedValue={quotationGraph?.approvedData?.percentage}
-                        title={fields?.['APPROVED_QUOTATION']?.fieldValue || 'Approved'}
+                        title={fields?.['APPROVED_ORDERS']?.fieldValue || 'Approved'}
                         dataCount={quotationCounts?.totalCountApproved}
                     />} */}
-
                     {/* {!!quotationGraph && <LineChartComponent
                         data={{
-                            labels: quotationGraph?.rejectedData?.categories?.length ? quotationGraph?.rejectedData?.categories : [],
+                            labels: quotationGraph?.deliveredData?.categories?.length ? quotationGraph?.deliveredData?.categories : [],
                             datasets: [
                                 {
-                                    data: quotationGraph?.rejectedData?.data?.length ? quotationGraph?.rejectedData?.data : [],
+                                    data: quotationGraph?.deliveredData?.data?.length ? quotationGraph?.deliveredData?.data : [],
                                 }
 
                             ]
                         }}
                         disableClick={false}
-                        onClick={() => fetchData('REJECTED')}
-                        comparedValue={quotationGraph?.rejectedData?.percentage}
-                        title={fields?.['REJECTED_QUOTATION']?.fieldValue || 'Rejected'}
-                        dataCount={quotationCounts?.totalCountRejected}
+                        onClick={() => fetchData('DELIVERED')}
+                        comparedValue={quotationGraph?.deliveredData?.percentage}
+                        title={fields?.['DELIVERING_ORDERS']?.fieldValue || 'Delivering'}
+                        dataCount={quotationCounts?.totalCountDelivered}
                     />} */}
 
                     {/* {!!quotationGraph && <LineChartComponent
@@ -495,7 +488,6 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         title={fields?.['ALL_QUOTATION']?.fieldValue || 'All'}
                         dataCount={quotationCounts?.totalCountAll}
                     />} */}
-
 
                     {!!quotationGraph && <SimpleLineChartComponent
                         title={fields?.['DRAFT_QUOTATION']?.fieldValue || 'Waiting For Submission'}
@@ -520,7 +512,7 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         onClick={() => fetchData('SUBMITTED')}
                     />}
                     {!!quotationGraph && <SimpleLineChartComponent
-                        title={fields?.['PENDING_QUOTATION']?.fieldValue || 'Waiting For Approval'}
+                        title={fields?.['PENDING_ORDERS']?.fieldValue || 'Waiting For Approval'}
                         dataCount={quotationCounts?.totalCountPending}
                         comparedValue={quotationGraph?.pendingData?.percentage}
                         disableClick={false}
@@ -530,6 +522,7 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         }}
                         onClick={() => fetchData('PENDING')}
                     />}
+
                     {!!quotationGraph && <SimpleLineChartComponent
                         title={fields?.['Approved']?.fieldValue || 'Approved'}
                         dataCount={quotationCounts?.totalCountApproved}
@@ -541,17 +534,16 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         }}
                         onClick={() => fetchData('APPROVED')}
                     />}
-
                     {!!quotationGraph && <SimpleLineChartComponent
-                        title={fields?.['REJECTED_QUOTATION']?.fieldValue || 'Rejected'}
-                        dataCount={quotationCounts?.totalCountRejected}
-                        comparedValue={quotationGraph?.rejectedData?.percentage}
+                        title={fields?.['DELIVERING_ORDERS']?.fieldValue || 'Delivering'}
+                        dataCount={quotationCounts?.totalCountDelivered}
+                        comparedValue={quotationGraph?.deliveredData?.percentage}
                         disableClick={false}
                         data={{
-                            dataset: quotationGraph?.rejectedData?.data,
-                            label: quotationGraph?.rejectedData?.categories,
+                            dataset: quotationGraph?.deliveredData?.data,
+                            label: quotationGraph?.deliveredData?.categories,
                         }}
-                        onClick={() => fetchData('REJECTED')}
+                        onClick={() => fetchData('DELIVERED')}
                     />}
                     {!!quotationGraph && <SimpleLineChartComponent
                         title={fields?.['ALL_QUOTATION']?.fieldValue || 'All'}
@@ -564,22 +556,22 @@ const AllQuotationScreen = ({ navigation, route }) => {
                         }}
                         onClick={() => fetchData('ALL')}
                     />}
-
                     {!quotationGraph && <ItemLoader customStyle={{ width: Dimensions.get("window").width }} />}
                 </ScrollView>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', right: 0 }}>
                 {/* <IconButton icon={() => <MaterialIcons name="filter-alt" size={20} color={colors.white} />} color="red" size={20}
-                    style={{ backgroundColor: colors.black, marginHorizontal: 0 }} onPress={() => console.log('Pressed')} /> */}
-                {/* <IconButton icon={() => <MaterialIcons name="add" size={20} color={colors.white} />} color="red" size={20}
-                    style={{ backgroundColor: colors.secondary, }} onPress={() => navigation.navigate('QuotationFormScreen')} /> */}
+                    style={{ backgroundColor: colors.black, marginHorizontal: 0 }} onPress={() => console.log('Pressed')} />
+                <IconButton icon={() => <MaterialIcons name="add" size={20} color={colors.white} />} color="red" size={20}
+                    style={{ backgroundColor: colors.secondary, }} onPress={() => navigation.navigate('OrderFormScreen')} /> */}
                 <Button
-                    onPress={() => navigation.navigate('QuotationFormScreen')}
+                    onPress={() => navigation.navigate('OrderFormScreen')}
                     icon={() => <MaterialIcons name="add" size={20} color={colors.white} />}
                     style={styles.button} mode="contained" textColor={colors.white} >
                     {t('Create')}
                 </Button>
             </View>
+
             {/* <DataTable>
                 <DataTable.Header>
                     <DataTable.Title>Dessert</DataTable.Title>
@@ -640,6 +632,10 @@ const AllQuotationScreen = ({ navigation, route }) => {
                     setItemsPerPage={onItemsPerPageChange}
                 /> */}
             {/* </DataTable> */}
+
+            {/* {fields && <CustomFlaglist listData={allData} getId={getClickedId}
+                buttonTitle={{ title: t('draft'), nestedScrollCheck: true }} />} */}
+
             {fields && <CustomFlaglist listData={allData} getId={getClickedId}
                 buttonTitle={{
                     show: true,
@@ -663,9 +659,19 @@ const AllQuotationScreen = ({ navigation, route }) => {
                     ))
                 }
             />
-        </View >
+            {/* <FlatList
+                data={allData}
+                keyExtractor={(item) => String(item.id)}
+                // onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                renderItem={({ item }) => <Text>{item.referenceNo}</Text>}
+            // ListFooterComponent={isLoading}
+            /> */}
 
-        // </>
+            {/* <Button icon="camera" style={{ backgroundColor: 'purple', color: colors.white, }} mode="contained" onPress={fetchData}>
+                Press me
+            </Button> */}
+        </View >
     );
 };
 
@@ -674,7 +680,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 5,
         backgroundColor: colors.primary,
-        // paddingVertical: 10,
+        paddingVertical: 10,
 
     },
     title: {
@@ -710,4 +716,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AllQuotationScreen;
+export default AllOrderScreen;

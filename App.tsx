@@ -8,8 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { ActivityIndicator, AppState, Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
-
-
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Toast from 'react-native-toast-message';
 import colors from './src/Utils/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,16 +16,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const App = () => {
-
-  AsyncStorage.getItem('persist:root').then((data) => {
-    console.log('Persisted data:', data); // Check if your token is stored correctly
-  });
+  // AsyncStorage.getItem('persist:root').then((data) => {
+  //   console.log('Persisted data:', data);
+  // });
 
 
   return (
     <Provider store={store}>
       <PersistGate loading={<Loading />} persistor={persistor}>
-        <PaperProvider>
+        <PaperProvider
+          settings={{
+            icon: (props) => <MaterialIcons {...props} />, // Setting icon globally for react-native-paper
+          }}>
           <SafeAreaView style={{ backgroundColor: colors.primary, flex: 1 }}>
             <NavigationContainer>
               <MainApp />

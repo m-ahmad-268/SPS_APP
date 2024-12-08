@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, setLoading, resetLoading, setUserData, setToken } from '../redux/slices/authSlice';
+import { logout, setLoading, resetLoading, setUserData, checkSession } from '../redux/slices/authSlice';
 import colors from '../Utils/colors';
 import PasswordField from '../Shared/passwordField';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -94,7 +94,7 @@ const SetPasswordScreen = ({ navigation, route }) => {
                         dispatch(setUserData({ siteId: siteId, priceLevel: priceLevelId, customerId: customerId }))
                         if (!!response.result.roles[0].path) {
                             console.log(response.result.roles[0].path);
-                            dispatch(setToken());
+                            dispatch(checkSession());
                             // this.router.navigate([response.result.roles[0].path]);
                         }
                     }

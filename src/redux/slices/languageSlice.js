@@ -6,6 +6,8 @@ const languageSlice = createSlice({
     name: 'language',
     initialState: {
         language: 'en', // default language
+        LTR: {},
+        RTL: {},
         // default language
     },
     reducers: {

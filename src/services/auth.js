@@ -68,6 +68,35 @@ export const loginUserForOtp = async (credentials) => {
     });
 };
 
+export const getCountryList = async (headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/getCountryList`;
+    return apiRequest({
+        url: url,
+        method: "GET",
+        headers: headers,
+    });
+};
+
+export const getStateListByCountryId = async (body, headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/getStateListByCountryId`;
+    return apiRequest({
+        url: url,
+        method: "POST",
+        data: body,
+        headers: headers,
+    });
+};
+
+export const getCityListByStateId = async (body, headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/getCityListByStateId`;
+    return apiRequest({
+        url: url,
+        method: "POST",
+        data: body,
+        headers: headers,
+    });
+};
+
 export const verifyOtpAuthentication = async (credentials) => {
     const url = `${userModuleApiBaseUrl}/login/verifyOtpAuthentication`;
     return apiRequest({
@@ -150,6 +179,16 @@ export const acceptTermsAndConditionsApi = async (credentials, headers = {}) => 
 
 export const setPasswordApi = async (credentials, headers = {}) => {
     const url = `${userModuleApiBaseUrl}/user/setPassword`;
+    return apiRequest({
+        url: url,
+        method: "POST",
+        data: credentials,
+        headers: headers,
+    });
+};
+
+export const updateActiveSession = async (credentials, headers = {}) => {
+    const url = `${userModuleApiBaseUrl}/updateActiveSession`;
     return apiRequest({
         url: url,
         method: "POST",

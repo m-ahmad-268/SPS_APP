@@ -2,8 +2,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginApi, refreshTokenApi, checkSessionApi, validateTokenApi } from '../../services/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 // Async Thunks
+
 export const login = createAsyncThunk(
     'auth/login',
     async (credentials, thunkAPI) => {
@@ -67,17 +67,19 @@ const authSlice = createSlice({
         isAuthenticated: false,
         error: null,
         userProfile: {},
-        activeRouteName: 'HomeScreen',
+        remember: null,
+        // activeRouteName: 'HomeScreen',
     },
     reducers: {
         logout(state) {
-            state.refreshToken = null;
             state.error = null;
             state.userProfile = {};
             state.token = null;
             state.refreshToken = null;
             state.isAuthenticated = false;
+            state.refreshToken = null;
             AsyncStorage.removeItem('currentUser');
+            // clearInterval(state.refreshToken);
             // AsyncStorage.removeItem('refreshToken');
         },
         setLoading(state) {
@@ -97,6 +99,12 @@ const authSlice = createSlice({
 
             const randomValue = Math.floor(Math.random() * 101);
             state.token = randomValue;
+        },
+        setRemember(state, action) {
+            state.remember = action?.payload;
+        },
+        setRefreshToken(state, action) {
+            state.refreshToken = action?.payload || null;
         },
     },
     extraReducers: (builder) => {
@@ -143,12 +151,12 @@ const authSlice = createSlice({
             .addCase(checkSession.pending, (state) => {
                 console.log('chcekSessionPEndingState-----------------');
 
-                state.isLoading = true;
+                // state.isLoading = true;
                 state.error = null;
             })
             .addCase(checkSession.fulfilled, (state, action) => {
                 console.log('checkSessinFulFilState------------', action?.payload.code);
-                state.isLoading = false;
+                // state.isLoading = false;
                 const responseCode = action?.payload.code; // Assuming responseCode is part of the payload
                 if (responseCode === 200) {
                     // state.userProfile = { ...action.payload?.result };
@@ -158,6 +166,11 @@ const authSlice = createSlice({
                     // Handle other response codes (e.g., 400, 401)
                     state.error = action.payload?.btiMessage?.message || 'Session Expired';
                     state.isAuthenticated = false;
+                    state.userProfile = {};
+                    state.token = null;
+                    state.refreshToken = null;
+                    state.refreshToken = null;
+                    AsyncStorage.removeItem('currentUser');
                 }
             })
             .addCase(checkSession.rejected, (state) => {
@@ -165,10 +178,10 @@ const authSlice = createSlice({
                 state.token = null;
                 state.refreshToken = null;
                 state.isAuthenticated = false;
-                state.isLoading = false;
+                // state.isLoading = false;
             });
     },
 });
 
-export const { logout, setLoading, resetLoading, setUserData, resetUserData, setToken } = authSlice.actions;
+export const { logout, setLoading, resetLoading, setUserData, resetUserData, setToken, setRefreshToken, setRemember } = authSlice.actions;
 export default authSlice.reducer;
